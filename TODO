@@ -1,0 +1,16 @@
+ * make runnable script (with main)
+    * and setup logger with --verbose
+    * + args.
+ * implement regexp matching in OplogWatcher (db + collection-level)
+ * what happens when we dropIndex?
+ * replayIndexes (=true)
+             # Skip inserts in system.indexes.
+            if '.system.indexes' in op['ns']:
+                continue
+ * ability to start the oplog from a certain point in time (for misc->meta split)
+ * ubervu OplogReplay:
+    * update last_ts only every 10K ops
+    * don't do deletes
+    * updates HACK
+
+ * OplogPrinter
