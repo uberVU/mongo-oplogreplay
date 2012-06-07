@@ -28,17 +28,23 @@ class TestOplogReplayer(unittest.TestCase):
         cls.source = pymongo.Connection(SOURCE_HOST)
         cls.dest = pymongo.Connection(DEST_HOST)
 
-    def _start_replay(self):
+    def _start_replay(self, **kwargs):
+        # Stop the OplogReplayer before starting a new one.
+        if getattr(self, 'oplogreplayer', None):
+            self._stop_replay()
+
         # Init & start OplogReplayer, in a separate thread.
-        self.oplogreplay = CountingOplogReplayer(SOURCE_HOST, SOURCE_REPLICASET,
-                                               DEST_HOST, poll_time=0.1)
-        self.thread = threading.Thread(target=self.oplogreplay.start)
+        self.oplogreplayer = CountingOplogReplayer(
+            SOURCE_HOST, SOURCE_REPLICASET, DEST_HOST, poll_time=0.1, **kwargs)
+        self.thread = threading.Thread(target=self.oplogreplayer.start)
         self.thread.start()
 
     def _stop_replay(self):
         # Stop OplogReplayer & join its thread.
-        self.oplogreplay.stop()
+        self.oplogreplayer.stop()
         self.thread.join()
+        # Delete oplogreplayer.
+        self.oplogreplayer = None
 
     def setUp(self):
         # Drop test databases.
@@ -141,3 +147,37 @@ class TestOplogReplayer(unittest.TestCase):
 
         # Test that no operation was replayed twice.
         self.assertEqual(CountingOplogReplayer.count, 450)
+
+    def test_index_operations(self):
+        # Create an index, then test that it was created on destionation.
+        index = self.sourcedb.testidx.ensure_index('idxfield')
+        self._synchronous_wait(1)
+        self.assertIn(index, self.destdb.testidx.index_information())
+
+        # Delete the index, and test that it was deleted from destination.
+        self.sourcedb.testidx.drop_index(index)
+        self._synchronous_wait(2)
+        self.assertNotIn(index, self.destdb.testidx.index_information())
+
+    def test_replay_indexes(self):
+        # Create index1 on source + dest.
+        index1 = self.sourcedb.testidx.ensure_index('idxfield1')
+
+        # Restart OplogReplayer, without replaying indexes.
+        self._start_replay(replay_indexes=False)
+
+        # Create index2 on source only.
+        index2 = self.sourcedb.testidx.ensure_index('idxfield2')
+        # Delete index1 from source only.
+        self.sourcedb.testidx.drop_index(index1)
+
+        self._synchronous_wait(3)
+
+        # Test indexes on source and destination.
+        source_indexes = self.sourcedb.testidx.index_information()
+        self.assertNotIn(index1, source_indexes)
+        self.assertIn(index2, source_indexes)
+
+        dest_indexes = self.destdb.testidx.index_information()
+        self.assertIn(index1, dest_indexes)
+        self.assertNotIn(index2, dest_indexes)
