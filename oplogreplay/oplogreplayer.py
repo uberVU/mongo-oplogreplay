@@ -73,7 +73,7 @@ class OplogReplayer(OplogWatcher):
                                               {'$set': {'value': self.ts}},
                                               upsert=True)
 
-    def process_op(self, ns, id, raw):
+    def process_op(self, ns, raw):
         if not self.replay_indexes and OplogReplayer.is_index_operation(raw):
             # Do not replay index operations.
             pass
@@ -82,7 +82,7 @@ class OplogReplayer(OplogWatcher):
             if OplogReplayer.is_drop_index(raw):
                 self.drop_index(raw)
             else:
-                OplogWatcher.process_op(self, ns, id, raw)
+                OplogWatcher.process_op(self, ns, raw)
 
         # Update the lastts on the destination
         self._update_lastts()
@@ -94,10 +94,10 @@ class OplogReplayer(OplogWatcher):
         db, collection = ns.split('.', 1)
         return self.dest[db][collection]
 
-    def insert(self, ns, id, obj, raw, **kw):
+    def insert(self, ns, docid, raw, **kw):
         """ Perform a single insert operation.
 
-            {'id': ObjectId('4e95ae77a20e6164850761cd'),
+            {'docid': ObjectId('4e95ae77a20e6164850761cd'),
              'ns': u'mydb.tweets',
              'op': u'i',
              'raw': {u'h': -1469300750073380169L,
@@ -110,10 +110,10 @@ class OplogReplayer(OplogWatcher):
         """
         self._dest_coll(ns).insert(raw['o'], safe=True)
 
-    def update(self, ns, id, mod, raw, **kw):
+    def update(self, ns, docid, raw, **kw):
         """ Perform a single update operation.
 
-            {'id': ObjectId('4e95ae3616692111bb000001'),
+            {'docid': ObjectId('4e95ae3616692111bb000001'),
              'ns': u'mydb.tweets',
              'op': u'u',
              'raw': {u'h': -5295451122737468990L,
@@ -125,10 +125,10 @@ class OplogReplayer(OplogWatcher):
         """
         self._dest_coll(ns).update(raw['o2'], raw['o'], safe=True)
 
-    def delete(self, ns, id, raw, **kw):
+    def delete(self, ns, docid, raw, **kw):
         """ Perform a single delete operation.
 
-            {'id': ObjectId('4e959ea11669210edc002902'),
+            {'docid': ObjectId('4e959ea11669210edc002902'),
              'ns': u'mydb.tweets',
              'op': u'd',
              'raw': {u'b': True,

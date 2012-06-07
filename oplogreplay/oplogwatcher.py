@@ -71,8 +71,7 @@ class OplogWatcher(object):
                 while self.running:
                     for op in cursor:
                         self.ts = op['ts']
-                        opid = self.__get_id(op)
-                        self.process_op(op['ns'], opid, op)
+                        self.process_op(op['ns'], op)
                     time.sleep(self.poll_time)
                     if not cursor.alive:
                         break
@@ -82,7 +81,7 @@ class OplogWatcher(object):
     def stop(self):
         self.running = False
 
-    def process_op(self, ns, id, raw):
+    def process_op(self, ns, raw):
         """ Processes a single operation from the oplog.
 
         Performs a switch by raw['op']:
@@ -93,15 +92,19 @@ class OplogWatcher(object):
             "db" declares presence of a database
             "n" no op
         """
+        # Compute the document id of the document that will be altered
+        # (in case of insert, update or delete).
+        docid = self.__get_id(raw)
+
         op = raw['op']
         if op == 'i':
-            self.insert(ns=ns, id=id, obj=raw['o'], raw=raw)
+            self.insert(ns=ns, docid=docid, raw=raw)
         elif op == 'u':
-            self.update(ns=ns, id=id, mod=raw['o'], raw=raw)
+            self.update(ns=ns, docid=docid, raw=raw)
         elif op == 'd':
-            self.delete(ns=ns, id=id, raw=raw)
+            self.delete(ns=ns, docid=docid, raw=raw)
         elif op == 'c':
-            self.command(ns=ns, cmd=raw['o'], raw=raw)
+            self.command(ns=ns, raw=raw)
         elif op == 'db':
             self.db_declare(ns=ns, raw=raw)
         elif op == 'n':
@@ -109,16 +112,16 @@ class OplogWatcher(object):
         else:
             logging.error("Unknown op: %r" % op)
 
-    def insert(self, ns, id, obj, raw, **kw):
+    def insert(self, ns, docid, raw, **kw):
         pass
 
-    def update(self, ns, id, mod, raw, **kw):
+    def update(self, ns, docid, raw, **kw):
         pass
 
-    def delete(self, ns, id, raw, **kw):
+    def delete(self, ns, docid, raw, **kw):
         pass
 
-    def command(self, ns, cmd, raw, **kw):
+    def command(self, ns, raw, **kw):
         pass
 
     def db_declare(self, ns, **kw):
