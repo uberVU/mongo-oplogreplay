@@ -12,7 +12,7 @@ class OplogReplayer(OplogWatcher):
     """
 
     @staticmethod
-    def is_create_indexindex_operation(raw):
+    def is_create_index(raw):
         """ Determines if the given operation is a "create index"" operation.
 
         { "op" : "i",
@@ -31,6 +31,10 @@ class OplogReplayer(OplogWatcher):
         """
         return raw['op'] == 'c' and 'dropIndexes' in raw['o']
 
+    @staticmethod
+    def is_index_operation(raw):
+        return (OplogReplayer.is_create_index(raw) or
+                OplogReplayer.is_drop_index(raw))
 
     def __init__(self, source, replicaset, dest, replay_indexes=True,
                  poll_time=1.0):
@@ -70,14 +74,15 @@ class OplogReplayer(OplogWatcher):
                                               upsert=True)
 
     def process_op(self, ns, op, id, raw):
-        # Treat "drop index" operations separately.
-        if OplogReplayer.is_drop_index(raw):
-            self.drop_index(raw)
+        if not self.replay_indexes and OplogReplayer.is_index_operation(raw):
+            # Do not replay index operations.
+            pass
         else:
-            OplogWatcher.process_op(self, ns, op, id, raw)
-        # # Skip inserts in system.indexes.
-        # if not self.replay_indexes and OplogReplayer.is_index_operation(raw):
-        #     return
+            # Treat "drop index" operations separately.
+            if OplogReplayer.is_drop_index(raw):
+                self.drop_index(raw)
+            else:
+                OplogWatcher.process_op(self, ns, op, id, raw)
 
         # Update the lastts on the destination
         self._update_lastts()
