@@ -70,7 +70,6 @@ class OplogWatcher(object):
 
                 while self.running:
                     for op in cursor:
-                        self.ts = op['ts']
                         self.process_op(op['ns'], op)
                     time.sleep(self.poll_time)
                     if not cursor.alive:
@@ -111,6 +110,9 @@ class OplogWatcher(object):
             self.noop()
         else:
             logging.error("Unknown op: %r" % op)
+
+        # Save timestamp of last processed oplog.
+        self.ts = raw['ts']
 
     def insert(self, ns, docid, raw, **kw):
         pass
