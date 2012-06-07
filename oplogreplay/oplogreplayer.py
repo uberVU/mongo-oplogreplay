@@ -73,7 +73,7 @@ class OplogReplayer(OplogWatcher):
                                               {'$set': {'value': self.ts}},
                                               upsert=True)
 
-    def process_op(self, ns, op, id, raw):
+    def process_op(self, ns, id, raw):
         if not self.replay_indexes and OplogReplayer.is_index_operation(raw):
             # Do not replay index operations.
             pass
@@ -82,7 +82,7 @@ class OplogReplayer(OplogWatcher):
             if OplogReplayer.is_drop_index(raw):
                 self.drop_index(raw)
             else:
-                OplogWatcher.process_op(self, ns, op, id, raw)
+                OplogWatcher.process_op(self, ns, id, raw)
 
         # Update the lastts on the destination
         self._update_lastts()

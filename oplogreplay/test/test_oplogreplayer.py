@@ -16,8 +16,8 @@ class CountingOplogReplayer(OplogReplayer):
 
     count = 0
 
-    def process_op(self, ns, op, id, raw):
-        OplogReplayer.process_op(self, ns, op, id, raw)
+    def process_op(self, ns, id, raw):
+        OplogReplayer.process_op(self, ns, id, raw)
         CountingOplogReplayer.count += 1
 
 class TestOplogReplayer(unittest.TestCase):

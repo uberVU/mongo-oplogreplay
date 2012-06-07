@@ -72,8 +72,7 @@ class OplogWatcher(object):
                     for op in cursor:
                         self.ts = op['ts']
                         opid = self.__get_id(op)
-                        self.process_op(ns=op['ns'], op=op['op'], id=opid,
-                                        raw=op)
+                        self.process_op(op['ns'], opid, op)
                     time.sleep(self.poll_time)
                     if not cursor.alive:
                         break
@@ -83,10 +82,10 @@ class OplogWatcher(object):
     def stop(self):
         self.running = False
 
-    def process_op(self, ns, op, id, raw):
+    def process_op(self, ns, id, raw):
         """ Processes a single operation from the oplog.
 
-        Performs a switch by "op":
+        Performs a switch by raw['op']:
             "i" insert
             "u" update
             "d" delete
@@ -94,6 +93,7 @@ class OplogWatcher(object):
             "db" declares presence of a database
             "n" no op
         """
+        op = raw['op']
         if op == 'i':
             self.insert(ns=ns, id=id, obj=raw['o'], raw=raw)
         elif op == 'u':
