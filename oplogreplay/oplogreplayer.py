@@ -99,7 +99,6 @@ class OplogReplayer(OplogWatcher):
 
             {'docid': ObjectId('4e95ae77a20e6164850761cd'),
              'ns': u'mydb.tweets',
-             'op': u'i',
              'raw': {u'h': -1469300750073380169L,
                      u'ns': u'mydb.tweets',
                      u'o': {u'_id': ObjectId('4e95ae77a20e6164850761cd'),
@@ -115,7 +114,6 @@ class OplogReplayer(OplogWatcher):
 
             {'docid': ObjectId('4e95ae3616692111bb000001'),
              'ns': u'mydb.tweets',
-             'op': u'u',
              'raw': {u'h': -5295451122737468990L,
                      u'ns': u'mydb.tweets',
                      u'o': {u'$set': {u'content': u'Lorem ipsum'}},
@@ -130,7 +128,6 @@ class OplogReplayer(OplogWatcher):
 
             {'docid': ObjectId('4e959ea11669210edc002902'),
              'ns': u'mydb.tweets',
-             'op': u'd',
              'raw': {u'b': True,
                      u'h': -8347418295715732480L,
                      u'ns': u'mydb.tweets',

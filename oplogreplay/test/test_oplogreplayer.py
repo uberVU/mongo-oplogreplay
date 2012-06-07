@@ -156,7 +156,7 @@ class TestOplogReplayer(unittest.TestCase):
 
         # Delete the index, and test that it was deleted from destination.
         self.sourcedb.testidx.drop_index(index)
-        self._synchronous_wait(2)
+        self._synchronous_wait(3)
         self.assertNotIn(index, self.destdb.testidx.index_information())
 
     def test_replay_indexes(self):
