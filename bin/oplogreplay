@@ -1,0 +1,58 @@
+#!/usr/bin/env python
+import sys
+import optparse
+import logging
+
+from oplogreplay import OplogReplayer
+
+__version__ = 0.1
+
+def parse_arguments():
+    usage = '%prog [options] source destination'
+    parser = optparse.OptionParser(usage=usage, version='%%prog %s' % __version__)
+
+    parser.add_option('--skipIndexes', action="store_false",
+                      dest="replay_indexes", default=True,
+                      help="skip replaying index operations")
+
+    parser.add_option('-v', '--verbose', action='store_true',
+                      dest='verbose', default=False,
+                      help='increase verbosity')
+
+    parser.add_option('--logpath', action='store', type='string',
+                      dest='logpath',
+                      help='log file to send write to instead of stdout')
+
+    (options, args) = parser.parse_args()
+    if len(args) != 2:
+        sys.exit("Missing operands. Run with --help for more information.")
+
+    options.source = args[0]
+    options.dest = args[1]
+    return options
+
+def setup_logging(options):
+    """ Setup basic logging. """
+    level = logging.DEBUG if options.verbose else logging.INFO
+    format = '%(asctime)s [%(levelname)s] %(message)s'
+    # Fri Jun  8 11:52:14
+    datefmt = '%a %b %d %X'
+
+    if options.logpath:
+        logging.basicConfig(filename=options.logpath, format=format,
+                            datefmt=datefmt, level=level)
+    else:
+        logging.basicConfig(format=format, datefmt=datefmt, level=level)
+
+def main():
+    options = parse_arguments()
+
+    setup_logging(options)
+
+    # Start OplogReplayer
+    oplogreplayer = OplogReplayer(options.source, options.dest,
+                                  replay_indexes=options.replay_indexes)
+    oplogreplay.start()
+
+if __name__ == '__main__':
+    main()
