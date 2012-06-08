@@ -3,11 +3,7 @@ OplogWatcher
 
 OplogReplayer
    * ability to start the oplog from a certain point in time (for misc->meta split)
-
-bin/scriptme
-   * make runnable script (with main)
-      * and setup logger with --verbose
-      * + args.
+   * use logging instead of print
 
 other
    * ubervu OplogReplay:
