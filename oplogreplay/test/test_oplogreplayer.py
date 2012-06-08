@@ -35,7 +35,7 @@ class TestOplogReplayer(unittest.TestCase):
 
         # Init & start OplogReplayer, in a separate thread.
         self.oplogreplayer = CountingOplogReplayer(
-            SOURCE_HOST, SOURCE_REPLICASET, DEST_HOST, poll_time=0.1, **kwargs)
+            SOURCE_HOST, DEST_HOST, poll_time=0.1, **kwargs)
         self.thread = threading.Thread(target=self.oplogreplayer.start)
         self.thread.start()
 

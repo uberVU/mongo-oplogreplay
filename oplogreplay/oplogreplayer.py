@@ -36,8 +36,15 @@ class OplogReplayer(OplogWatcher):
         return (OplogReplayer.is_create_index(raw) or
                 OplogReplayer.is_drop_index(raw))
 
-    def __init__(self, source, replicaset, dest, replay_indexes=True,
-                 poll_time=1.0):
+    def __init__(self, source, dest, replay_indexes=True, poll_time=1.0):
+        # Create a one-time connection to source, to determine replicaset.
+        c = pymongo.Connection(source)
+        try:
+            obj = c.local.system.replset.find_one()
+            replicaset = obj['_id']
+        except:
+            raise ValueError('Could not determine replicaset for %r' % source)
+
         # Mongo source is a replica set, connect to it as such.
         self.source = pymongo.Connection(source, replicaset=replicaset)
         # Use ReadPreference.SECONDARY because we can afford to read oplogs
