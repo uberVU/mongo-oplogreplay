@@ -52,8 +52,7 @@ class OplogWatcher(object):
                 self.ts = None
 
         if self.ts:
-            logging.info('Watching oplogs with timesteamp greater than %s' %
-                         self.ts)
+            logging.info('Watching oplogs with timesteamp >= %s' % self.ts)
         else:
             logging.info('Watching all oplogs')
 

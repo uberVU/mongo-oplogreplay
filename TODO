@@ -3,7 +3,6 @@ OplogWatcher
 
 OplogReplayer
    * ability to start the oplog from a certain point in time (for misc->meta split)
-   * use logging instead of print
 
 other
    * ubervu OplogReplay:
