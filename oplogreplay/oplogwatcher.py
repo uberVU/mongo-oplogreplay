@@ -8,7 +8,8 @@ from bson.timestamp import Timestamp
 class OplogWatcher(object):
     """ Watches operation logs over a single mongo connection.
 
-    Longer class information.... - WRITE ME!
+    Polls the oplog.rs collection of a given mongo connection for new oplog
+    entries, and calls process_op for each new entry.
     """
 
     @staticmethod
@@ -48,7 +49,7 @@ class OplogWatcher(object):
                 self.ts = None
 
         if self.ts:
-            logging.info('Watching oplogs with timesteamp >= %s' % self.ts)
+            logging.info('Watching oplogs with timesteamp > %s' % self.ts)
         else:
             logging.info('Watching all oplogs')
 

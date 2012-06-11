@@ -21,6 +21,16 @@ class CountingOplogReplayer(OplogReplayer):
         CountingOplogReplayer.count += 1
 
 class TestOplogReplayer(unittest.TestCase):
+    """ TestCase for the OplogReplayer.
+
+    Each test performs the following (see setUp and tearDown for more details):
+      * delete test databases
+      * start an OplogReplayer
+      * perform some actions (inserts, etc.)
+      * wait for the OplogReplayer to finish replaying ops
+      * assertions
+      * stop the OplogReplayer
+    """
 
     @classmethod
     def setUpClass(cls):

@@ -5,7 +5,7 @@ import logging
 from oplogwatcher import OplogWatcher
 
 class OplogReplayer(OplogWatcher):
-    """ Replayes all oplogs from one mongo connection to another.
+    """ Replays all oplogs from one mongo connection to another.
 
     Watches a mongo connection for write ops (source), and replays them
     into another mongo connection (destination).
