@@ -1,13 +1,2 @@
-OplogWatcher
-   * implement regexp matching in OplogWatcher (db + collection-level)
-
-OplogReplayer
-   * ability to start the oplog from a certain point in time (for misc->meta split)
-
-other
-   * ubervu OplogReplay:
-      * update last_ts only every 10K ops
-      * don't do deletes
-      * updates HACK
-
-   * OplogPrinter
+ * implement regexp matching in OplogWatcher (database + collection-level)
+ * OplogPrinter - simple class that just prints the oplogs

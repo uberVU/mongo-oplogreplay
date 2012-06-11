@@ -3,6 +3,7 @@ import logging
 
 import pymongo
 from pymongo.errors import AutoReconnect, OperationFailure, DuplicateKeyError
+from bson.timestamp import Timestamp
 
 class OplogWatcher(object):
     """ Watches operation logs over a single mongo connection.
@@ -23,6 +24,9 @@ class OplogWatcher(object):
         return opid
 
     def __init__(self, connection, ts=None, poll_time=1.0):
+        if ts is not None and not isinstance(ts, Timestamp):
+            raise ValueError('ts argument: expected %r, got %r' % \
+                             (Timestamp, type(ts)))
         self.poll_time = poll_time
         self.connection = connection
         self.ts = ts

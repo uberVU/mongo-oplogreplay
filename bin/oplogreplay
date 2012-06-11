@@ -4,12 +4,11 @@ import optparse
 import logging
 
 from oplogreplay import OplogReplayer
-
-__version__ = 0.1
+from bson.timestamp import Timestamp
 
 def parse_arguments():
     usage = '%prog [options] source destination'
-    parser = optparse.OptionParser(usage=usage, version='%%prog %s' % __version__)
+    parser = optparse.OptionParser(usage=usage)
 
     parser.add_option('--skipIndexes', action="store_false",
                       dest="replay_indexes", default=True,
@@ -23,13 +22,45 @@ def parse_arguments():
                       dest='logpath',
                       help='log file to send write to instead of stdout')
 
+    parser.add_option('--timestamp', action='store', type='string',
+                      dest='timestamp',
+                      help='start oplog-replay from this timestamp forward '
+                           '(e.g.: "1339412676,7")')
+
     (options, args) = parser.parse_args()
+
+    # Validate timestamp.
+    if options.timestamp:
+        try:
+            options.timestamp = convert_timestamp(options.timestamp)
+        except ValueError:
+            sys.exit("Invalid timestamp value: %s" % options.timestamp)
+
     if len(args) != 2:
         sys.exit("Missing operands. Run with --help for more information.")
-
     options.source = args[0]
     options.dest = args[1]
+
     return options
+
+def convert_timestamp(timestamp_str):
+    """ Validates & converts a timestamp string.
+
+    E.g.:
+        "1339412676,7" -> Timestamp(1339412676, 7)
+        "1339412676" -> Timestamp(1339412676, 0)
+    """
+    strarr = timestamp_str.split(',')
+    if len(strarr) == 1:
+        ts = int(strarr[0])
+        i = 0
+    elif len(strarr) == 2:
+        ts = int(strarr[0])
+        i = int(strarr[1])
+    else:
+        raise ValueError("invalid timestamp_str value %r" % timestamp_str)
+
+    return Timestamp(ts, i)
 
 def setup_logging(options):
     """ Setup basic logging. """
@@ -51,7 +82,8 @@ def main():
 
     # Start OplogReplayer
     oplogreplayer = OplogReplayer(options.source, options.dest,
-                                  replay_indexes=options.replay_indexes)
+                                  replay_indexes=options.replay_indexes,
+                                  ts=options.timestamp)
     oplogreplay.start()
 
 if __name__ == '__main__':
