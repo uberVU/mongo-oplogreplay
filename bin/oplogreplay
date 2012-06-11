@@ -10,10 +10,6 @@ def parse_arguments():
     usage = '%prog [options] source destination'
     parser = optparse.OptionParser(usage=usage)
 
-    parser.add_option('--skipIndexes', action="store_false",
-                      dest="replay_indexes", default=True,
-                      help="skip replaying index operations")
-
     parser.add_option('-v', '--verbose', action='store_true',
                       dest='verbose', default=False,
                       help='increase verbosity')
@@ -21,6 +17,10 @@ def parse_arguments():
     parser.add_option('--logpath', action='store', type='string',
                       dest='logpath',
                       help='log file to send write to instead of stdout')
+
+    parser.add_option('--skipIndexes', action="store_false",
+                      dest="replay_indexes", default=True,
+                      help="skip replaying index operations")
 
     parser.add_option('--timestamp', action='store', type='string',
                       dest='timestamp',
@@ -84,7 +84,7 @@ def main():
     oplogreplayer = OplogReplayer(options.source, options.dest,
                                   replay_indexes=options.replay_indexes,
                                   ts=options.timestamp)
-    oplogreplay.start()
+    oplogreplayer.start()
 
 if __name__ == '__main__':
     main()
