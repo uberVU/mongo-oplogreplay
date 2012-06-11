@@ -2,7 +2,7 @@ from distutils.core import setup
 
 setup(
     name='OplogReplay',
-    version='0.1.01',
+    version='0.1.2',
     author='Mihnea Giurgea',
     author_email='GiurgeaMihnea@gmail.com',
     packages=['oplogreplay', 'oplogreplay.test'],
