@@ -22,21 +22,12 @@ class OplogWatcher(object):
 
         return opid
 
-    def __init__(self, connection, db=None, collection=None, poll_time=1.0, ts=None):
-        if collection is not None:
-            if db is None:
-                raise ValueError('must specify db if you specify a collection')
-            self._ns_filter = db + '.' + collection
-        elif db is not None:
-            self._ns_filter = db
-        else:
-            self._ns_filter = None
-
+    def __init__(self, connection, poll_time=1.0, ts=None):
         self.poll_time = poll_time
         self.connection = connection
         self.ts = ts
 
-        self.running = True
+        self.running = False
 
     def start(self):
         """ Starts the OplogWatcher. """
@@ -56,10 +47,10 @@ class OplogWatcher(object):
         else:
             logging.info('Watching all oplogs')
 
+        # Mark as running & start.
+        self.running = True
         while self.running:
             query = { 'ts': {'$gt': self.ts} }
-            if self._ns_filter is not None:
-                query['ns'] = self._ns_filter
 
             try:
                 logging.debug('Tailing over %r...' % query)

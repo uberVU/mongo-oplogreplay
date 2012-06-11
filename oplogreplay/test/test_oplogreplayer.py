@@ -8,8 +8,8 @@ import threading
 from oplogreplay import OplogReplayer
 
 SOURCE_HOST = '127.0.0.1:27017'
-SOURCE_REPLICASET = 'testsource'
 DEST_HOST = '127.0.0.1:27018'
+TESTDB = 'testdb'
 
 # Inherit from OplogReplayer to count number of processed_op methodcalls.
 class CountingOplogReplayer(OplogReplayer):
@@ -48,8 +48,8 @@ class TestOplogReplayer(unittest.TestCase):
 
     def setUp(self):
         # Drop test databases.
-        self.source.drop_database('testdb')
-        self.dest.drop_database('testdb')
+        self.source.drop_database(TESTDB)
+        self.dest.drop_database(TESTDB)
         self.dest.drop_database('oplogreplay')
         # Sleep a little to allow drop database operations to complete.
         time.sleep(0.5)
@@ -181,3 +181,4 @@ class TestOplogReplayer(unittest.TestCase):
         dest_indexes = self.destdb.testidx.index_information()
         self.assertIn(index1, dest_indexes)
         self.assertNotIn(index2, dest_indexes)
+
