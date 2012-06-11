@@ -41,7 +41,8 @@ class TestOplogReplayer(unittest.TestCase):
 
     def _stop_replay(self):
         # Stop OplogReplayer & join its thread.
-        self.oplogreplayer.stop()
+        if getattr(self, 'oplogreplayer', None):
+            self.oplogreplayer.stop()
         self.thread.join()
         # Delete oplogreplayer.
         self.oplogreplayer = None
@@ -74,12 +75,14 @@ class TestOplogReplayer(unittest.TestCase):
         Waits until the oplog's retry_count hits target, but at most
         timeout seconds.
         """
-        start_time = time.time()
-        while time.time() - start_time < timeout:
+        wait_until = time.time() + timeout
+        while time.time() < wait_until:
             if CountingOplogReplayer.count == target:
-                return True
+                return
             time.sleep(0.1)
-        return False
+        # Synchronously waiting timed out - we should alert this.
+        raise Exception('retry_count was only %s/%s after a %.2fsec wait' % \
+                        (CountingOplogReplayer.count, target, timeout))
 
     def assertCollectionEqual(self, coll1, coll2):
         self.assertEqual(coll1.count(), coll2.count(),
@@ -156,7 +159,7 @@ class TestOplogReplayer(unittest.TestCase):
 
         # Delete the index, and test that it was deleted from destination.
         self.sourcedb.testidx.drop_index(index)
-        self._synchronous_wait(3)
+        self._synchronous_wait(2)
         self.assertNotIn(index, self.destdb.testidx.index_information())
 
     def test_replay_indexes(self):
@@ -182,3 +185,21 @@ class TestOplogReplayer(unittest.TestCase):
         self.assertIn(index1, dest_indexes)
         self.assertNotIn(index2, dest_indexes)
 
+    def test_start_from_ts(self):
+        self._stop_replay()
+
+        # Should not be replayed:
+        self.sourcedb.testcoll.insert({'content': 'mycontent', 'nr': 1})
+
+        # Get last timestamp.
+        obj = self.source.local.oplog.rs.find().sort('$natural', -1).limit(1)[0]
+        lastts = obj['ts']
+
+        # Should be replayed.
+        self.sourcedb.testcoll.insert({'content': 'mycontent', 'nr': 1})
+
+        self._start_replay(ts=lastts)
+
+        self._synchronous_wait(1)
+
+        self.assertEqual(self.destdb.testcoll.count(), 1)

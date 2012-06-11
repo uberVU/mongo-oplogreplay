@@ -36,7 +36,8 @@ class OplogReplayer(OplogWatcher):
         return (OplogReplayer.is_create_index(raw) or
                 OplogReplayer.is_drop_index(raw))
 
-    def __init__(self, source, dest, replay_indexes=True, poll_time=1.0):
+    def __init__(self, source, dest, replay_indexes=True, ts=None,
+                 poll_time=1.0):
         # Create a one-time connection to source, to determine replicaset.
         c = pymongo.Connection(source)
         try:
@@ -57,7 +58,10 @@ class OplogReplayer(OplogWatcher):
 
         self.replay_indexes = replay_indexes
 
-        ts = self._get_lastts()
+        # When no ts argument is supplied, get the last timestamp from dest.
+        if ts is None:
+            ts = self._get_lastts()
+
         self._replay_count = 0
         OplogWatcher.__init__(self, self.source, ts=ts, poll_time=poll_time)
 

@@ -22,12 +22,13 @@ class OplogWatcher(object):
 
         return opid
 
-    def __init__(self, connection, poll_time=1.0, ts=None):
+    def __init__(self, connection, ts=None, poll_time=1.0):
         self.poll_time = poll_time
         self.connection = connection
         self.ts = ts
 
-        self.running = False
+        # Mark as running.
+        self.running = True
 
     def start(self):
         """ Starts the OplogWatcher. """
@@ -47,8 +48,6 @@ class OplogWatcher(object):
         else:
             logging.info('Watching all oplogs')
 
-        # Mark as running & start.
-        self.running = True
         while self.running:
             query = { 'ts': {'$gt': self.ts} }
 
