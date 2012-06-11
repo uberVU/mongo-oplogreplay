@@ -12,6 +12,13 @@ The included bin/oplogreplay script should cover most of the usecases::
 
 (see oplogreplay --help for more details)
 
+Installing
+==========
+
+Installing is as easy as::
+
+    pip install oplogreplay
+
 Advanced usage
 ==============
 
