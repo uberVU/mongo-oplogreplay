@@ -40,8 +40,9 @@ class TestOplogReplayer(unittest.TestCase):
 
     def _start_replay(self, **kwargs):
         # Stop the OplogReplayer before starting a new one.
-        if getattr(self, 'oplogreplayer', None):
-            self._stop_replay()
+        self._stop_replay()
+        #if getattr(self, 'oplogreplayer', None):
+        #    self._stop_replay()
 
         # Init & start OplogReplayer, in a separate thread.
         self.oplogreplayer = CountingOplogReplayer(
@@ -53,9 +54,11 @@ class TestOplogReplayer(unittest.TestCase):
         # Stop OplogReplayer & join its thread.
         if getattr(self, 'oplogreplayer', None):
             self.oplogreplayer.stop()
-        self.thread.join()
-        # Delete oplogreplayer.
+        if getattr(self, 'thread', None):
+            self.thread.join()
+        # Delete oplogreplayer & thread.
         self.oplogreplayer = None
+        self.thread = None
 
     def setUp(self):
         # Drop test databases.
@@ -63,17 +66,17 @@ class TestOplogReplayer(unittest.TestCase):
         self.dest.drop_database(TESTDB)
         self.dest.drop_database('oplogreplay')
         # Sleep a little to allow drop database operations to complete.
-        time.sleep(0.5)
+        time.sleep(0.05)
 
         # Remember Database objects.
         self.sourcedb = self.source.testdb
         self.destdb = self.dest.testdb
 
-        # Reset global counter.
-        CountingOplogReplayer.count = 0
-        # Remember number of oplogs before starting this test.
-        self.oplog_count_before_test = self.source.local.oplog.rs.count()
+        # Stop replay, in case it was still running from a previous test.
+        self._stop_replay()
 
+        # Reset global counter & start OplogReplayer.
+        CountingOplogReplayer.count = 0
         self._start_replay()
 
     def tearDown(self):
@@ -89,7 +92,7 @@ class TestOplogReplayer(unittest.TestCase):
         while time.time() < wait_until:
             if CountingOplogReplayer.count == target:
                 return
-            time.sleep(0.1)
+            time.sleep(0.05)
         # Synchronously waiting timed out - we should alert this.
         raise Exception('retry_count was only %s/%s after a %.2fsec wait' % \
                         (CountingOplogReplayer.count, target, timeout))
