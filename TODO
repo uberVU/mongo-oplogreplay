@@ -1,2 +1,12 @@
+ * make print_replication_info match this:
+
+   PRIMARY> db.printSlaveReplicationInfo()
+    source:   ubvu-recenta2.ubervu.local:27006
+        	 syncedTo: Thu Jun 14 2012 18:40:36 GMT+0300 (EEST)
+        		       = 148069 secs ago (41.13hrs)
+    source:   ubvu-holy1.ubervu.local:27106
+        	 syncedTo: Thu Jan 01 1970 02:00:00 GMT+0200 (EET)
+        		       = 1339836505 secs ago (372176.81hrs)
+
  * implement regexp matching in OplogWatcher (database + collection-level)
  * OplogPrinter - simple class that just prints the oplogs
