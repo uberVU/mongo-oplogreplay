@@ -1,4 +1,5 @@
 import time
+from datetime import timedelta
 import logging
 
 import pymongo
@@ -65,13 +66,37 @@ class OplogReplayer(OplogWatcher):
             ts = self._get_lastts()
 
         self._replay_count = 0
+        # Compute velocity every few ops.
+        self._started_at = self._last_velocity_at = time.time()
+        self._last_replay_count = 0
         OplogWatcher.__init__(self, self.source, ts=ts, poll_time=poll_time)
 
     def print_replication_info(self):
-        delay = int(time.time()) - self.ts.time
-        logging.debug('synced = %ssecs ago (%.2fhrs)' % (delay, delay/3600.0))
-        logging.debug('[%s] replayed %s ops' % (time.strftime('%x %X'),
-                      self._replay_count))
+        # Only print replication info every few hundred replayed ops.
+        if self._replay_count % 5000 == 0:
+            lprint = logging.info
+        elif self._replay_count % 500 == 0:
+            lprint = logging.debug
+        else:
+            return
+
+        # Avoid multiple time.time() syscalls.
+        now = time.time()
+
+        # Print sync status.
+        delay = now - self.ts.time
+        lprint('synced = %dsecs ago (%.2fhrs)' % (delay, delay/3600.0))
+
+        # Print current velocity (ops per second).
+        new_ops_since_last_print = self._replay_count - self._last_replay_count
+        velocity = new_ops_since_last_print / (now - self._last_velocity_at)
+        self._last_replay_count = self._replay_count
+        self._last_velocity_at = now
+        lprint('current replay speed: %.2fops/sec' % velocity)
+
+        # Print total number of oplogs replayed.
+        tdiff = timedelta(seconds=int(now - self._started_at))
+        lprint('replayed %s ops in %s' % (self._replay_count, tdiff))
 
     def _get_lastts(self):
         # Get the last oplog ts that was played on destination.
@@ -100,8 +125,7 @@ class OplogReplayer(OplogWatcher):
         # Update the lastts on the destination
         self._update_lastts()
         self._replay_count += 1
-        if self._replay_count % 100 == 0:
-            self.print_replication_info()
+        self.print_replication_info()
 
     def _dest_coll(self, ns):
         db, collection = ns.split('.', 1)
