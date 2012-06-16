@@ -49,7 +49,7 @@ class OplogWatcher(object):
                 self.ts = None
 
         if self.ts:
-            logging.info('Watching oplogs with timesteamp > %s' % self.ts)
+            logging.info('Watching oplogs with timestamp > %s' % self.ts)
         else:
             logging.info('Watching all oplogs')
 
@@ -68,7 +68,11 @@ class OplogWatcher(object):
                     time.sleep(self.poll_time)
                     if not cursor.alive:
                         break
-            except (AutoReconnect, OperationFailure):
+            except AutoReconnect, e:
+                logging.warning(e)
+                time.sleep(self.poll_time)
+            except OperationFailure, e:
+                logging.exception(e)
                 time.sleep(self.poll_time)
 
     def stop(self):
