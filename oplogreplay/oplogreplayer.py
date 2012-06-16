@@ -1,6 +1,8 @@
 import time
-import pymongo
 import logging
+
+import pymongo
+from pymongo.errors import DuplicateKeyError
 
 from oplogwatcher import OplogWatcher
 
@@ -118,7 +120,10 @@ class OplogReplayer(OplogWatcher):
                      u'op': u'i',
                      u'ts': Timestamp(1318432375, 1)}}
         """
-        self._dest_coll(ns).insert(raw['o'], safe=True)
+        try:
+            self._dest_coll(ns).insert(raw['o'], safe=True)
+        except DuplicateKeyError, e:
+            logging.warning(e)
 
     def update(self, ns, docid, raw, **kw):
         """ Perform a single update operation.
