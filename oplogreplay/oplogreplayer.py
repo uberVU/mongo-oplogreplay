@@ -188,3 +188,18 @@ class OplogReplayer(OplogWatcher):
         dbname = raw['ns'].split('.', 1)[0]
         collname = raw['o']['dropIndexes']
         self.dest[dbname][collname].drop_index(raw['o']['index'])
+
+    def command(self, ns, raw, **kw):
+        """ Executes command.
+
+            { "op" : "c",
+              "ns" : "testdb.$cmd",
+              "o" : { "drop" : "fs.files"}
+            }
+        """
+        try:
+            dbname = raw['ns'].split('.', 1)[0]
+            self.dest[dbname].command(raw['o'])
+        except Exception, e:
+            logging.warning(e)
+
