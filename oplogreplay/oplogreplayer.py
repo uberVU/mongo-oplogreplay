@@ -3,7 +3,7 @@ from datetime import timedelta
 import logging
 
 import pymongo
-from pymongo.errors import DuplicateKeyError
+from pymongo.errors import DuplicateKeyError, OperationFailure
 
 from oplogwatcher import OplogWatcher
 
@@ -199,7 +199,7 @@ class OplogReplayer(OplogWatcher):
         """
         try:
             dbname = raw['ns'].split('.', 1)[0]
-            self.dest[dbname].command(raw['o'])
-        except Exception, e:
+            self.dest[dbname].command(raw['o'], check=True)
+        except OperationFailure, e:
             logging.warning(e)
 
