@@ -40,7 +40,7 @@ class OplogReplayer(OplogWatcher):
                 OplogReplayer.is_drop_index(raw))
 
     def __init__(self, source, dest, replay_indexes=True, ts=None,
-                 poll_time=1.0):
+                 poll_time=1.0, databases=None):
         # Create a one-time connection to source, to determine replicaset.
         c = pymongo.Connection(source)
         try:
@@ -69,7 +69,7 @@ class OplogReplayer(OplogWatcher):
         # Compute velocity every few ops.
         self._started_at = self._last_velocity_at = time.time()
         self._last_replay_count = 0
-        OplogWatcher.__init__(self, self.source, ts=ts, poll_time=poll_time)
+        OplogWatcher.__init__(self, self.source, ts=ts, poll_time=poll_time, databases=databases)
 
     def print_replication_info(self):
         # Only print replication info every few hundred replayed ops.

@@ -27,6 +27,10 @@ def parse_arguments():
                       help='start oplog-replay from this timestamp forward '
                            '(e.g.: "1339412676,7")')
 
+    parser.add_option('--database', action='append', type='string',
+                      dest='databases',
+                      help='only replay from this database (may specify multiple times)')
+
     (options, args) = parser.parse_args()
 
     # Validate timestamp.
@@ -83,7 +87,9 @@ def main():
     # Start OplogReplayer
     oplogreplayer = OplogReplayer(options.source, options.dest,
                                   replay_indexes=options.replay_indexes,
-                                  ts=options.timestamp)
+                                  ts=options.timestamp,
+                                  databases=options.databases
+                                  )
     oplogreplayer.start()
 
 if __name__ == '__main__':
