@@ -24,13 +24,14 @@ class OplogWatcher(object):
 
         return opid
 
-    def __init__(self, connection, ts=None, poll_time=1.0):
+    def __init__(self, connection, ts=None, poll_time=1.0, databases=None):
         if ts is not None and not isinstance(ts, Timestamp):
             raise ValueError('ts argument: expected %r, got %r' % \
                              (Timestamp, type(ts)))
         self.poll_time = poll_time
         self.connection = connection
         self.ts = ts
+        self.databases = databases
 
         # Mark as running.
         self.running = True
@@ -89,25 +90,39 @@ class OplogWatcher(object):
             "db" declares presence of a database
             "n" no op
         """
-        # Compute the document id of the document that will be altered
-        # (in case of insert, update or delete).
-        docid = self.__get_id(raw)
 
         op = raw['op']
-        if op == 'i':
-            self.insert(ns=ns, docid=docid, raw=raw)
-        elif op == 'u':
-            self.update(ns=ns, docid=docid, raw=raw)
-        elif op == 'd':
-            self.delete(ns=ns, docid=docid, raw=raw)
-        elif op == 'c':
-            self.command(ns=ns, raw=raw)
-        elif op == 'db':
-            self.db_declare(ns=ns, raw=raw)
-        elif op == 'n':
-            self.noop()
-        else:
-            logging.error("Unknown op: %r" % op)
+        process = True
+
+        # check the database option and possibly not process this op
+        if op != 'n' and self.databases:
+            try:
+                db, collection = ns.split('.', 1)
+            except ValueError:
+                logging.error("Unable to parse ns: %r" % ns)
+            else:
+                if db not in self.databases:
+                    process = False
+
+        if process:
+            # Compute the document id of the document that will be altered
+            # (in case of insert, update or delete).
+            docid = self.__get_id(raw)
+
+            if op == 'i':
+                self.insert(ns=ns, docid=docid, raw=raw)
+            elif op == 'u':
+                self.update(ns=ns, docid=docid, raw=raw)
+            elif op == 'd':
+                self.delete(ns=ns, docid=docid, raw=raw)
+            elif op == 'c':
+                self.command(ns=ns, raw=raw)
+            elif op == 'db':
+                self.db_declare(ns=ns, raw=raw)
+            elif op == 'n':
+                self.noop()
+            else:
+                logging.error("Unknown op: %r" % op)
 
         # Save timestamp of last processed oplog.
         self.ts = raw['ts']
