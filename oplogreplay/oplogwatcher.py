@@ -72,8 +72,11 @@ class OplogWatcher(object):
                 logging.warning(e)
                 time.sleep(self.poll_time)
             except OperationFailure, e:
-                logging.exception(e)
+                logging.exception("Error")
                 time.sleep(self.poll_time)
+            except Exception, e:
+                logging.error("Error handling %r" % op)
+                raise
 
     def stop(self):
         self.running = False
