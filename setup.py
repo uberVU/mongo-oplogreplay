@@ -12,6 +12,6 @@ setup(
     description='MongoDB oplog replay utility.',
     long_description=open('README.txt').read(),
     install_requires=[
-        "pymongo == 2.1.1"
+        "pymongo == 2.5.2"
     ],
 )
